@@ -5,6 +5,7 @@
 
 # include "dims.h"
 # include "dungeon.h"
+# include "object.h"
 
 typedef struct dungeon dungeon_t;
 
@@ -15,18 +16,32 @@ void place_pc(dungeon_t *d);
 void delete_pc(character *the_pc);
 void pc_learn_terrain(character *the_pc, pair_t pos, terrain_type_t ter);
 terrain_type_t pc_learned_terrain(character *the_pc, int8_t y, int8_t x);
+void pc_reset_visibility(character *the_pc);
+void pc_see_object(character *the_pc, object *o);
+int32_t pc_get_free_inv_slot();
+bool pc_pickup_object(dungeon_t *d);
+
 void pc_init_known_terrain(character *the_pc);
 void pc_observe_terrain(character *the_pc, dungeon_t *d);
 int32_t is_illuminated(character *the_pc, int8_t y, int8_t x);
 void pc_reset_visibility(character *the_pc);
 void pc_see_object(character *the_pc, object *o);
+bool pc_equip(dungeon_t *d, int key);
+bool pc_drop(dungeon_t *d, int slot, int inEquipment);
+bool pc_takeoff(dungeon_t *d,int slot);
+bool pc_expunge(dungeon_t* d, int slot);
+int  pc_calculate_dmg(character *the_pc);
 
 # include "character.h"
 
 class pc : public character {
- public:
-  terrain_type_t known_terrain[DUNGEON_Y][DUNGEON_X];
-  unsigned char visible[DUNGEON_Y][DUNGEON_X];
+  public:
+int32_t pc_get_free_inv_slot();
+bool pc_pickup_object(dungeon_t *d);
+terrain_type_t known_terrain[DUNGEON_Y][DUNGEON_X];
+unsigned char visible[DUNGEON_Y][DUNGEON_X];
+object *equipment[12];
+object *inventory[10];
 };
 
 #endif

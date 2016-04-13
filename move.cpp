@@ -13,13 +13,55 @@
 #include "utils.h"
 #include "path.h"
 #include "io.h"
+#include "sstream"
+
+void swap_monsters(dungeon_t *d, character *atk, character *def)
+{
+    d->charmap[character_get_y(def)][character_get_x(def)] = atk;
+    d->charmap[character_get_y(atk)][character_get_x(atk)] = def;
+
+    int tempY = atk->position[dim_y];
+    int tempX = atk->position[dim_x];
+
+    character_set_y(atk, def->position[dim_y]);
+    character_set_x(atk, def->position[dim_x]);
+    character_set_y(def, tempY);
+    character_set_x(def, tempX);
+}
 
 void do_combat(dungeon_t *d, character *atk, character *def)
 {
-  character_die(def);
-  if (def != d->pc) {
-    d->num_monsters--;
-  }
+  if (d->pc != def && d->pc != atk)
+   {
+        swap_monsters(d ,atk, def);
+   }
+   else if (d->pc == atk)
+   {
+        uint32_t dmg = pc_calculate_dmg(atk);
+        std::stringstream msg;
+        msg << "You hit the " << def->name << " for " << dmg << " damage!" << "(press any key)";
+        combatMsg(d,msg.str().c_str());
+        def->hp -= dmg;
+        if(def->hp <= 0)
+        {
+            character_die(d, def);
+            std::stringstream msg1;
+            msg << "You have slain the " << def->name << " (press any key)";
+            d->num_monsters--;
+        }
+   }
+   else if (d->pc == def)
+   {
+        int dmg = atk->damage->roll();
+        std::stringstream msg;
+        msg << "You got hit by the " << atk->name << " for " << dmg << " damage!" << "(pres any key)";
+        combatMsg(d,msg.str().c_str());
+        def->hp -= dmg;
+        if(def->hp <= 0)
+        {
+            character_die(d, d->pc);
+        }
+    }
 }
 
 void move_character(dungeon_t *d, character *c, pair_t next)
@@ -27,15 +69,16 @@ void move_character(dungeon_t *d, character *c, pair_t next)
   if (charpair(next) &&
       ((next[dim_y] != character_get_y(c)) ||
        (next[dim_x] != character_get_x(c)))) {
-    do_combat(d, c, charpair(next));
+        do_combat(d, c, charpair(next));
   }
   /* No character in new position. */
-
+ else
+{
   d->charmap[character_get_y(c)][character_get_x(c)] = NULL;
   character_set_y(c, next[dim_y]);
   character_set_x(c, next[dim_x]);
   d->charmap[character_get_y(c)][character_get_x(c)] = c;
-
+}
   if (c == d->pc) {
     pc_reset_visibility(c);
     pc_observe_terrain(c, d);
@@ -80,6 +123,13 @@ void do_moves(dungeon_t *d)
   if (pc_is_alive(d) && c == d->pc) {
     character_next_turn(c);
     io_handle_input(d);
+    while(d->objmap[c->position[dim_y]][c->position[dim_x]] != NULL)
+    {
+        if(pc_pickup_object(d) == false)
+        {
+            break;
+        }
+    }
   }
 }
 

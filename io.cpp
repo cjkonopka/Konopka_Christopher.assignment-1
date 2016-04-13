@@ -49,7 +49,7 @@ static void unmask_alarm(void)
 
 void io_init_terminal(dungeon_t *d)
 {
-  struct itimerval itv;
+ struct itimerval itv;
 
   initscr();
   raw();
@@ -572,6 +572,150 @@ static void io_list_monsters(dungeon_t *d)
   io_display(d);
 }
 
+static void io_list_equipment(dungeon_t *d, const char *c)
+{
+    clear();
+    mvprintw(0,0,"%s", c);
+    mvprintw(1,0,"%s", "equipment:");
+   int i;
+
+    for(i = 0; i < 12; i++)
+    {
+        mvprintw((i + 2), 0, "%c", 97 + i); 
+        if(((pc *)d->pc)->equipment[i])
+        {
+            mvprintw((i + 2), 2, ((pc *)d->pc)->equipment[i]->get_name());
+        }
+        else
+        {
+            mvprintw((i + 2), 2, "%s", "empty");
+        }
+    }
+    refresh();
+}
+
+static void io_list_inventory(dungeon_t *d, const char * c)
+{
+    clear();
+    mvprintw(0,0, "%s", c);
+    mvprintw(1,0,"%s", "inventory:");
+
+   int i;
+
+    for(i = 0; i < 10; i++)
+    {
+        mvprintw((i + 2), 0, "%d", i);
+        if(((pc *)d->pc)->inventory[i])
+        {
+            mvprintw((i + 2), 2, ((pc *)d->pc)->inventory[i]->get_name());
+        }
+        else
+        {
+            mvprintw((i + 2), 2,"%s", "empty");
+        }
+    }
+    refresh();
+}
+
+static void io_inventory_display(dungeon_t *d)
+{
+    mask_alarm();
+    io_list_inventory(d, "");
+     while (getch() != 27 /* escape */);
+    unmask_alarm();
+}
+
+static void io_equipment_display(dungeon_t *d)
+{
+    mask_alarm();
+    io_list_equipment(d, "");
+    while (getch() != 27 /* escape */);
+    unmask_alarm();
+}
+
+static void io_equip_item(dungeon_t *d)
+{
+    mask_alarm();
+    io_list_inventory(d, "Choose the slot of an item to equip:");
+    int key1 = getch();
+    while(((key1 - 48) < 0 || (key1 - 48) > 9) && key1 != 27)
+    {
+        io_list_inventory(d, "Invalid slot selection, select again, esc to cancel");
+        key1 = getch();
+    }
+    pc_equip(d, key1-48);
+    unmask_alarm();
+}
+static void io_drop_item(dungeon_t *d)
+{
+    mask_alarm();
+    io_list_inventory(d, "Choose the slot of an item to drop:");
+    int key1 = getch();
+    while(((key1 - 48) < 0 || (key1 - 48) > 9) && key1 != 27)
+    {
+        io_list_inventory(d, "Invalid slot selection, select again, esc to cancel");
+        key1 = getch();
+    }
+    pc_drop(d, (key1 - 48),0);
+    unmask_alarm();
+}
+
+static void io_takeoff_item(dungeon_t *d)
+{
+    mask_alarm();
+    io_list_equipment(d, "Choose the slot of an item to unequip:");
+    int key1 = getch();
+    while(((key1-97) < 0 || (key1-97) > 11) && key1 != 27)
+    {
+        io_list_equipment(d, "Invalid slot selection, select again, esc to cancel");
+        key1 = getch();
+    }
+    pc_takeoff(d, (key1-97));
+    unmask_alarm();
+}
+
+static void io_expunge_item(dungeon_t *d)
+{
+    mask_alarm();
+    io_list_inventory(d, "Choose the slot of an item to DESTROY:");
+    int key1 = getch();
+    while(((key1 - 48) < 0 || (key1 - 48) > 9) && key1 != 27)
+    {
+        io_list_inventory(d, "Invalid slot selection, select again, esc to cancel");
+        key1 = getch();
+    }
+    pc_expunge(d, (key1 - 48));
+    unmask_alarm();
+}
+
+static void io_inspect_item(dungeon_t *d)
+{
+    mask_alarm();
+    io_list_inventory(d, "Choose the slot of an item to inspect:");
+    int key1 = getch();
+    while(((key1 - 48) < 0 || (key1 - 48) > 9) && key1 != 27)
+    {
+        io_list_inventory(d, "Invalid slot selection, select again, esc to cancel");
+        key1 = getch();
+    }
+    clear();
+
+    if(((pc *)d->pc)->inventory[key1 - 48] ==  NULL)
+    {
+      mvprintw(0,0,"%s", "no item selected");
+    }
+    else
+    {
+        mvprintw(0,0,"%s", ((pc *)d->pc)->inventory[(key1-48)]->get_name());
+        mvprintw(1,0,"%s", ((pc *)d->pc)->inventory[(key1-48)]->get_description());
+    }
+    refresh();
+    while (getch() != 27 /* escape */);
+    unmask_alarm();
+}
+
+
+
 void io_handle_input(dungeon_t *d)
 {
   uint32_t fail_code;
@@ -655,10 +799,37 @@ void io_handle_input(dungeon_t *d)
       io_display_hardness(d);
       fail_code = 1;
       break;
+    case 'e':
+      io_equipment_display(d);
+      fail_code = 1;
+      break;
+    case 'i':
+      io_inventory_display(d);
+      fail_code = 1;
+      break;
+    case 'd':
+      io_drop_item(d);
+      fail_code = 1;
+      break;
+    case 'x':
+      io_expunge_item(d);
+      fail_code = 1;
+      break;
+    case 'I':
+      io_inspect_item(d);
+      fail_code = 1;
+      break;
+    case 't':
+      io_takeoff_item(d);
+      fail_code = 1;
     case 's':
       /* New command.  Return to normal display after displaying some   *
        * special screen.                                                */
       io_display(d);
+      fail_code = 1;
+      break;
+    case 'w':
+      io_equip_item(d);
       fail_code = 1;
       break;
     case 'g':
@@ -709,4 +880,12 @@ void io_handle_input(dungeon_t *d)
       fail_code = 1;
     }
   } while (fail_code);
+}
+void combatMsg(dungeon_t *d, const char * c)
+{
+    io_display(d);
+    mask_alarm();
+    mvprintw(0,0,"%s", c);
+    getch();
+    unmask_alarm();
 }

@@ -8,7 +8,14 @@
 
 void character_delete(void *c)
 {
-  delete (character *) c;
+  if(((character *)c)->symbol == '@')
+  {
+    delete_pc((pc*) c);
+  }
+  else
+  {
+    delete (character *) c;
+   }
 }
 
 static char *print_character(const void *v)
@@ -164,9 +171,10 @@ uint32_t character_get_next_turn(const character *c)
   return ((character *) c)->next_turn;
 }
 
-void character_die(character *c)
+void character_die(dungeon_t *d, character *c)
 {
   ((character *) c)->alive = 0;
+  d->charmap[c->position[dim_y]][c->position[dim_x]] = NULL;
 }
 
 int character_is_alive(const character *c)
@@ -178,14 +186,14 @@ void character_next_turn(character *c)
 {
   character *the_character = (character *) c;
 
-  the_character->next_turn += (1000 / the_character->speed);
+  the_character->next_turn += (1000 / the_character->get_speed());
 }
 
 void character_reset_turn(character *c)
 {
   character *the_character = (character *) c;
 
-  the_character->next_turn -= (1000 / the_character->speed);
+  the_character->next_turn -= (1000 / the_character->get_speed());
 }
 
 char character_get_symbol(const character *c)

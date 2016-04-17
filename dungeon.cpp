@@ -638,12 +638,13 @@ void new_dungeon(dungeon_t *d)
   d->character_sequence_number = sequence_number;
 
   place_pc(d);
-  d->charmap[character_get_y(d->pc)][character_get_x(d->pc)] = d->pc;
+  d->charmap[character_get_y(d->the_pc)][character_get_x(d->the_pc)] =
+    d->the_pc;
 
   /* Need to add a mechanism to decide on a number of monsters.  --nummon  *
    * is just for testing, and if we're generating new dungeon levels, then *
    * presumably we've already done that testing.  We'll just put 10 in for *
    * now.                                                                  */
-  gen_monsters(d, d->max_monsters, character_get_next_turn(d->pc));
+  gen_monsters(d, d->max_monsters, character_get_next_turn(d->the_pc));
   gen_objects(d, d->max_objects);
 }

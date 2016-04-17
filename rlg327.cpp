@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
   gen_objects(&d, d.max_objects);
 
   io_init_terminal(&d);
-  pc_observe_terrain(d.pc, &d);
+  pc_observe_terrain(d.the_pc, &d);
   io_display(&d);
   while (pc_is_alive(&d) && dungeon_has_npcs(&d) && !d.save_and_exit) {
     do_moves(&d);
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
     /* If the PC is dead, it's in the move heap and will get automatically *
      * deleted when the heap destructs.  In that case, we can't call       *
      * delete_pc(), because it will lead to a double delete.               */
-    delete_pc(d.pc);
+    delete_pc(d.the_pc);
   }
   delete_dungeon(&d);
   destroy_descriptions(&d);

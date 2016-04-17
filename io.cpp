@@ -49,7 +49,7 @@ static void unmask_alarm(void)
 
 void io_init_terminal(dungeon_t *d)
 {
- struct itimerval itv;
+  struct itimerval itv;
 
   initscr();
   raw();
@@ -121,13 +121,13 @@ static void io_print_message_queue(uint32_t y, uint32_t x)
     mvprintw(y, x, "%-80s", io_head->msg);
     attroff(COLOR_PAIR(COLOR_CYAN));
     io_head = io_head->next;
-    if (io_head) {
-      attron(COLOR_PAIR(COLOR_CYAN));
-      mvprintw(y, x + 70, "%10s", " --more-- ");
-      attroff(COLOR_PAIR(COLOR_CYAN));
-      refresh();
-      getch();
-    }
+    /* Removed the test for head that prevents "more" prompt on final *
+     * message in order to prevent redraw from smashing it.           */
+    attron(COLOR_PAIR(COLOR_CYAN));
+    mvprintw(y, x + 70, "%10s", " --more-- ");
+    attroff(COLOR_PAIR(COLOR_CYAN));
+    refresh();
+    getch();
     free(io_tail);
   }
   io_tail = NULL;
@@ -198,6 +198,17 @@ static char distance_to_char[] = {
   'Y',
   'Z'
 };
+
+void io_display_ch(dungeon_t *d)
+{
+  mask_alarm();
+  mvprintw(11, 33, " HP:    %5d ", d->the_pc->hp);
+  mvprintw(12, 33, " Speed: %5d ", d->the_pc->speed);
+  mvprintw(14, 27, " Hit any key to continue. ");
+  refresh();
+  getch();
+  unmask_alarm();
+}
 
 void io_display_tunnel(dungeon_t *d)
 {
@@ -309,6 +320,7 @@ void io_display_all(dungeon_t *d)
   io_print_message_queue(0, 0);
 
   refresh();
+  getch();
   unmask_alarm();
 }
 
@@ -316,15 +328,17 @@ void io_display(dungeon_t *d)
 {
   uint32_t y, x;
   uint32_t illuminated;
+
+  mask_alarm();
   clear();
   for (y = 0; y < DUNGEON_Y; y++) {
     for (x = 0; x < DUNGEON_X; x++) {
-      if ((illuminated = is_illuminated(d->pc, y, x))) {
+      if ((illuminated = is_illuminated(d->the_pc, y, x))) {
         attron(A_BOLD);
       }
       if (d->charmap[y][x] &&
           can_see(d,
-                  character_get_pos(d->pc),
+                  character_get_pos(d->the_pc),
                   character_get_pos(d->charmap[y][x]),
                   1)) {
         attron(COLOR_PAIR(d->charmap[y][x]->get_color()));
@@ -335,7 +349,7 @@ void io_display(dungeon_t *d)
         mvaddch(y + 1, x, d->objmap[y][x]->get_symbol());
         attroff(COLOR_PAIR(d->objmap[y][x]->get_color()));
       } else {
-        switch (pc_learned_terrain(d->pc, y, x)) {
+        switch (pc_learned_terrain(d->the_pc, y, x)) {
         case ter_wall:
         case ter_wall_immutable:
         case ter_unknown:
@@ -372,6 +386,7 @@ void io_display(dungeon_t *d)
   io_print_message_queue(0, 0);
 
   refresh();
+  unmask_alarm();
 }
 
 void io_display_monster_list(dungeon_t *d)
@@ -393,17 +408,17 @@ uint32_t io_teleport_pc(dungeon_t *d)
     dest[dim_y] = rand_range(1, DUNGEON_Y - 2);
   } while (charpair(dest));
 
-  d->charmap[character_get_y(d->pc)][character_get_x(d->pc)] = NULL;
-  d->charmap[dest[dim_y]][dest[dim_x]] = d->pc;
+  d->charmap[character_get_y(d->the_pc)][character_get_x(d->the_pc)] = NULL;
+  d->charmap[dest[dim_y]][dest[dim_x]] = d->the_pc;
 
-  character_set_y(d->pc, dest[dim_y]);
-  character_set_x(d->pc, dest[dim_x]);
+  character_set_y(d->the_pc, dest[dim_y]);
+  character_set_x(d->the_pc, dest[dim_x]);
 
   if (mappair(dest) < ter_floor) {
     mappair(dest) = ter_floor;
   }
 
-  pc_observe_terrain(d->pc, d);
+  pc_observe_terrain(d->the_pc, d);
 
   dijkstra(d);
   dijkstra_tunnel(d);
@@ -489,7 +504,7 @@ static void io_list_monsters_display(dungeon_t *d,
 
   (void) adjectives;
 
-  s = (char (*)[40]) malloc(count * sizeof (*s));
+  s = (char (*)[40]) malloc((count ? count : 1) * sizeof (*s));
 
   mvprintw(3, 19, " %-40s ", "");
   /* Borrow the first element of our array for this string: */
@@ -502,11 +517,11 @@ static void io_list_monsters_display(dungeon_t *d,
              (is_vowel(character_get_name(c[i])[0]) ? "An " : "A "),
              character_get_name(c[i]),
              character_get_symbol(c[i]),
-             abs(character_get_y(c[i]) - character_get_y(d->pc)),
-             ((character_get_y(c[i]) - character_get_y(d->pc)) <= 0 ?
+             abs(character_get_y(c[i]) - character_get_y(d->the_pc)),
+             ((character_get_y(c[i]) - character_get_y(d->the_pc)) <= 0 ?
               "North" : "South"),
-             abs(character_get_x(c[i]) - character_get_x(d->pc)),
-             ((character_get_x(c[i]) - character_get_x(d->pc)) <= 0 ?
+             abs(character_get_x(c[i]) - character_get_x(d->the_pc)),
+             ((character_get_x(c[i]) - character_get_x(d->the_pc)) <= 0 ?
               "East" : "West"));
     if (count <= 13) {
       /* Handle the non-scrolling case right here. *
@@ -551,8 +566,8 @@ static void io_list_monsters(dungeon_t *d)
   for (count = 0, y = 1; y < DUNGEON_Y - 1; y++) {
     for (x = 1; x < DUNGEON_X - 1; x++) {
       if (d->charmap[y][x] &&
-          d->charmap[y][x] != d->pc &&
-          can_see(d, d->pc->position, character_get_pos(d->charmap[y][x]), 1)) {
+          d->charmap[y][x] != d->the_pc &&
+          can_see(d, d->the_pc->position, character_get_pos(d->charmap[y][x]), 1)) {
         c[count++] = d->charmap[y][x];
       }
     }
@@ -572,149 +587,290 @@ static void io_list_monsters(dungeon_t *d)
   io_display(d);
 }
 
-static void io_list_equipment(dungeon_t *d, const char *c)
+void io_object_to_string(object *o, char *s, uint32_t size)
 {
-    clear();
-    mvprintw(0,0,"%s", c);
-    mvprintw(1,0,"%s", "equipment:");
-   int i;
+  if (o) {
+    snprintf(s, size, "%s (sp: %d, dmg: %d+%dd%d)",
+             o->get_name(), o->get_speed(), o->get_damage_base(),
+             o->get_damage_number(), o->get_damage_sides());
+  } else {
+    *s = '\0';
+  }
+}
 
-    for(i = 0; i < 12; i++)
-    {
-        mvprintw((i + 2), 0, "%c", 97 + i); 
-        if(((pc *)d->pc)->equipment[i])
-        {
-            mvprintw((i + 2), 2, ((pc *)d->pc)->equipment[i]->get_name());
-        }
-        else
-        {
-            mvprintw((i + 2), 2, "%s", "empty");
-        }
+uint32_t io_wear_eq(dungeon_t *d)
+{
+  uint32_t i, key;
+  char s[61];
+
+  mask_alarm();
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    /* We'll write 12 lines, 10 of inventory, 1 blank, and 1 prompt. *
+     * We'll limit width to 60 characters, so very long object names *
+     * will be truncated.  In an 80x24 terminal, this gives offsets  *
+     * at 10 x and 6 y to start printing things.  Same principal in  *
+     * other functions, below.                                       */
+    io_object_to_string(d->the_pc->in[i], s, 61);
+    mvprintw(i + 6, 10, " %c) %-55s ", '0' + i, s);
+  }
+  mvprintw(16, 10, " %-58s ", "");
+  mvprintw(17, 10, " %-58s ", "Wear which item (ESC to cancel)?");
+  refresh();
+
+  while (1) {
+    if ((key = getch()) == 27 /* ESC */) {
+      io_display(d);
+      unmask_alarm();
+      return 1;
     }
+
+    if (key < '0' || key > '9') {
+      if (isprint(key)) {
+        snprintf(s, 61, "Invalid input: '%c'.  Enter 0-9 or ESC to cancel.",
+                 key);
+        mvprintw(18, 10, " %-58s ", s);
+      } else {
+        mvprintw(18, 10, " %-58s ",
+                 "Invalid input.  Enter 0-9 or ESC to cancel.");
+      }
+      refresh();
+      continue;
+    }
+
+    if (!d->the_pc->in[key - '0']) {
+      mvprintw(18, 10, " %-58s ", "Empty inventory slot.  Try again.");
+      continue;
+    }
+
+    if (!d->the_pc->wear_in(key - '0')) {
+      unmask_alarm();
+      return 0;
+    }
+
+    snprintf(s, 61, "Can't wear %s.  Try again.",
+             d->the_pc->in[key - '0']->get_name());
+    mvprintw(18, 10, " %-58s ", s);
     refresh();
+  }
+
+  unmask_alarm();
+  return 1;
 }
 
-static void io_list_inventory(dungeon_t *d, const char * c)
+void io_display_in(dungeon_t *d)
 {
-    clear();
-    mvprintw(0,0, "%s", c);
-    mvprintw(1,0,"%s", "inventory:");
+  uint32_t i;
+  char s[61];
 
-   int i;
+  mask_alarm();
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    io_object_to_string(d->the_pc->in[i], s, 61);
+    mvprintw(i + 7, 10, " %c) %-55s ", '0' + i, s);
+  }
 
-    for(i = 0; i < 10; i++)
-    {
-        mvprintw((i + 2), 0, "%d", i);
-        if(((pc *)d->pc)->inventory[i])
-        {
-            mvprintw((i + 2), 2, ((pc *)d->pc)->inventory[i]->get_name());
-        }
-        else
-        {
-            mvprintw((i + 2), 2,"%s", "empty");
-        }
+  mvprintw(17, 10, " %-58s ", "");
+  mvprintw(18, 10, " %-58s ", "Hit any key to continue.");
+
+  refresh();
+
+  getch();
+  unmask_alarm();
+
+  io_display(d);
+}
+
+uint32_t io_remove_eq(dungeon_t *d)
+{
+  uint32_t i, key;
+  char s[61], t[61];
+
+  mask_alarm();
+  for (i = 0; i < num_eq_slots; i++) {
+    sprintf(s, "[%s]", eq_slot_name[i]);
+    io_object_to_string(d->the_pc->eq[i], t, 61);
+    mvprintw(i + 5, 10, " %c %-9s) %-45s ", 'a' + i, s, t);
+  }
+  mvprintw(17, 10, " %-58s ", "");
+  mvprintw(18, 10, " %-58s ", "Take off which item (ESC to cancel)?");
+  refresh();
+
+  while (1) {
+    if ((key = getch()) == 27 /* ESC */) {
+      io_display(d);
+      return 1;
     }
+
+    if (key < 'a' || key > 'l') {
+      if (isprint(key)) {
+        snprintf(s, 61, "Invalid input: '%c'.  Enter a-l or ESC to cancel.",
+                 key);
+        mvprintw(18, 10, " %-58s ", s);
+      } else {
+        mvprintw(18, 10, " %-58s ",
+                 "Invalid input.  Enter a-l or ESC to cancel.");
+      }
+      refresh();
+      continue;
+    }
+
+    if (!d->the_pc->eq[key - 'a']) {
+      mvprintw(18, 10, " %-58s ", "Empty equipment slot.  Try again.");
+      continue;
+    }
+
+    if (!d->the_pc->remove_eq(key - 'a')) {
+      unmask_alarm();
+      return 0;
+    }
+
+    snprintf(s, 61, "Can't take off %s.  Try again.",
+             d->the_pc->eq[key - 'a']->get_name());
+    mvprintw(19, 10, " %-58s ", s);
+  }
+
+  unmask_alarm();
+  return 1;
+}
+
+void io_display_eq(dungeon_t *d)
+{
+  uint32_t i;
+  char s[61], t[61];
+
+  mask_alarm();
+  for (i = 0; i < num_eq_slots; i++) {
+    sprintf(s, "[%s]", eq_slot_name[i]);
+    io_object_to_string(d->the_pc->eq[i], t, 61);
+    mvprintw(i + 5, 10, " %c %-9s) %-45s ", 'a' + i, s, t);
+  }
+  mvprintw(17, 10, " %-58s ", "");
+  mvprintw(18, 10, " %-58s ", "Hit any key to continue.");
+
+  refresh();
+
+  getch();
+
+  io_display(d);
+  unmask_alarm();
+}
+
+uint32_t io_drop_in(dungeon_t *d)
+{
+  uint32_t i, key;
+  char s[61];
+
+  mask_alarm();
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    /* We'll write 12 lines, 10 of inventory, 1 blank, and 1 prompt. *
+     * We'll limit width to 60 characters, so very long object names *
+     * will be truncated.  In an 80x24 terminal, this gives offsets  *
+     * at 10 x and 6 y to start printing things.                     */
+      mvprintw(i + 6, 10, " %c) %-55s ", '0' + i,
+               d->the_pc->in[i] ? d->the_pc->in[i]->get_name() : "");
+  }
+  mvprintw(16, 10, " %-58s ", "");
+  mvprintw(17, 10, " %-58s ", "Drop which item (ESC to cancel)?");
+  refresh();
+
+  while (1) {
+    if ((key = getch()) == 27 /* ESC */) {
+      io_display(d);
+      unmask_alarm();
+      return 1;
+    }
+
+    if (key < '0' || key > '9') {
+      if (isprint(key)) {
+        snprintf(s, 61, "Invalid input: '%c'.  Enter 0-9 or ESC to cancel.",
+                 key);
+        mvprintw(18, 10, " %-58s ", s);
+      } else {
+        mvprintw(18, 10, " %-58s ",
+                 "Invalid input.  Enter 0-9 or ESC to cancel.");
+      }
+      refresh();
+      continue;
+    }
+
+    if (!d->the_pc->in[key - '0']) {
+      mvprintw(18, 10, " %-58s ", "Empty inventory slot.  Try again.");
+      continue;
+    }
+
+    if (!d->the_pc->drop_in(d, key - '0')) {
+      unmask_alarm();
+      return 0;
+    }
+
+    snprintf(s, 61, "Can't drop %s.  Try again.",
+             d->the_pc->in[key - '0']->get_name());
+    mvprintw(18, 10, " %-58s ", s);
     refresh();
+  }
+
+  unmask_alarm();
+  return 1;
 }
 
-static void io_inventory_display(dungeon_t *d)
+uint32_t io_expunge_in(dungeon_t *d)
 {
-    mask_alarm();
-    io_list_inventory(d, "");
-     while (getch() != 27 /* escape */);
-    unmask_alarm();
-}
+  uint32_t i, key;
+  char s[61];
 
-static void io_equipment_display(dungeon_t *d)
-{
-    mask_alarm();
-    io_list_equipment(d, "");
-    while (getch() != 27 /* escape */);
-    unmask_alarm();
-}
+  mask_alarm();
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    /* We'll write 12 lines, 10 of inventory, 1 blank, and 1 prompt. *
+     * We'll limit width to 60 characters, so very long object names *
+     * will be truncated.  In an 80x24 terminal, this gives offsets  *
+     * at 10 x and 6 y to start printing things.                     */
+      mvprintw(i + 6, 10, " %c) %-55s ", '0' + i,
+               d->the_pc->in[i] ? d->the_pc->in[i]->get_name() : "");
+  }
+  mvprintw(16, 10, " %-58s ", "");
+  mvprintw(17, 10, " %-58s ", "Destroy which item (ESC to cancel)?");
+  refresh();
 
-static void io_equip_item(dungeon_t *d)
-{
-    mask_alarm();
-    io_list_inventory(d, "Choose the slot of an item to equip:");
-    int key1 = getch();
-    while(((key1 - 48) < 0 || (key1 - 48) > 9) && key1 != 27)
-    {
-        io_list_inventory(d, "Invalid slot selection, select again, esc to cancel");
-        key1 = getch();
+  while (1) {
+    if ((key = getch()) == 27 /* ESC */) {
+      io_display(d);
+      unmask_alarm();
+      return 1;
     }
-    pc_equip(d, key1-48);
-    unmask_alarm();
-}
-static void io_drop_item(dungeon_t *d)
-{
-    mask_alarm();
-    io_list_inventory(d, "Choose the slot of an item to drop:");
-    int key1 = getch();
-    while(((key1 - 48) < 0 || (key1 - 48) > 9) && key1 != 27)
-    {
-        io_list_inventory(d, "Invalid slot selection, select again, esc to cancel");
-        key1 = getch();
-    }
-    pc_drop(d, (key1 - 48),0);
-    unmask_alarm();
-}
 
-static void io_takeoff_item(dungeon_t *d)
-{
-    mask_alarm();
-    io_list_equipment(d, "Choose the slot of an item to unequip:");
-    int key1 = getch();
-    while(((key1-97) < 0 || (key1-97) > 11) && key1 != 27)
-    {
-        io_list_equipment(d, "Invalid slot selection, select again, esc to cancel");
-        key1 = getch();
+    if (key < '0' || key > '9') {
+      if (isprint(key)) {
+        snprintf(s, 61, "Invalid input: '%c'.  Enter 0-9 or ESC to cancel.",
+                 key);
+        mvprintw(18, 10, " %-58s ", s);
+      } else {
+        mvprintw(18, 10, " %-58s ",
+                 "Invalid input.  Enter 0-9 or ESC to cancel.");
+      }
+      refresh();
+      continue;
     }
-    pc_takeoff(d, (key1-97));
-    unmask_alarm();
-}
 
-static void io_expunge_item(dungeon_t *d)
-{
-    mask_alarm();
-    io_list_inventory(d, "Choose the slot of an item to DESTROY:");
-    int key1 = getch();
-    while(((key1 - 48) < 0 || (key1 - 48) > 9) && key1 != 27)
-    {
-        io_list_inventory(d, "Invalid slot selection, select again, esc to cancel");
-        key1 = getch();
+    if (!d->the_pc->in[key - '0']) {
+      mvprintw(18, 10, " %-58s ", "Empty inventory slot.  Try again.");
+      continue;
     }
-    pc_expunge(d, (key1 - 48));
-    unmask_alarm();
-}
 
-static void io_inspect_item(dungeon_t *d)
-{
-    mask_alarm();
-    io_list_inventory(d, "Choose the slot of an item to inspect:");
-    int key1 = getch();
-    while(((key1 - 48) < 0 || (key1 - 48) > 9) && key1 != 27)
-    {
-        io_list_inventory(d, "Invalid slot selection, select again, esc to cancel");
-        key1 = getch();
-    }
-    clear();
+    if (!d->the_pc->destroy_in(key - '0')) {
+      io_display(d);
 
-    if(((pc *)d->pc)->inventory[key1 - 48] ==  NULL)
-    {
-      mvprintw(0,0,"%s", "no item selected");
+      unmask_alarm();
+      return 1;
     }
-    else
-    {
-        mvprintw(0,0,"%s", ((pc *)d->pc)->inventory[(key1-48)]->get_name());
-        mvprintw(1,0,"%s", ((pc *)d->pc)->inventory[(key1-48)]->get_description());
-    }
+
+    snprintf(s, 61, "Can't destroy %s.  Try again.",
+             d->the_pc->in[key - '0']->get_name());
+    mvprintw(18, 10, " %-58s ", s);
     refresh();
-    while (getch() != 27 /* escape */);
-    unmask_alarm();
+  }
+
+  unmask_alarm();
+  return 1;
 }
-
-
 
 void io_handle_input(dungeon_t *d)
 {
@@ -776,7 +932,7 @@ void io_handle_input(dungeon_t *d)
       break;
     case 'S':
       d->save_and_exit = 1;
-      character_reset_turn(d->pc);
+      character_reset_turn(d->the_pc);
       fail_code = 0;
       break;
     case 'Q':
@@ -799,37 +955,10 @@ void io_handle_input(dungeon_t *d)
       io_display_hardness(d);
       fail_code = 1;
       break;
-    case 'e':
-      io_equipment_display(d);
-      fail_code = 1;
-      break;
-    case 'i':
-      io_inventory_display(d);
-      fail_code = 1;
-      break;
-    case 'd':
-      io_drop_item(d);
-      fail_code = 1;
-      break;
-    case 'x':
-      io_expunge_item(d);
-      fail_code = 1;
-      break;
-    case 'I':
-      io_inspect_item(d);
-      fail_code = 1;
-      break;
-    case 't':
-      io_takeoff_item(d);
-      fail_code = 1;
     case 's':
       /* New command.  Return to normal display after displaying some   *
        * special screen.                                                */
       io_display(d);
-      fail_code = 1;
-      break;
-    case 'w':
-      io_equip_item(d);
       fail_code = 1;
       break;
     case 'g':
@@ -843,6 +972,30 @@ void io_handle_input(dungeon_t *d)
       break;
     case 'a':
       io_display_all(d);
+      fail_code = 1;
+      break;
+    case 'w':
+      fail_code = io_wear_eq(d);
+      break;
+    case 't':
+      fail_code = io_remove_eq(d);
+      break;
+    case 'd':
+      fail_code = io_drop_in(d);
+      break;
+    case 'x':
+      fail_code = io_expunge_in(d);
+      break;
+    case 'i':
+      io_display_in(d);
+      fail_code = 1;
+      break;
+    case 'e':
+      io_display_eq(d);
+      fail_code = 1;
+      break;
+    case 'c':
+      io_display_ch(d);
       fail_code = 1;
       break;
     case 'q':
@@ -880,12 +1033,4 @@ void io_handle_input(dungeon_t *d)
       fail_code = 1;
     }
   } while (fail_code);
-}
-void combatMsg(dungeon_t *d, const char * c)
-{
-    io_display(d);
-    mask_alarm();
-    mvprintw(0,0,"%s", c);
-    getch();
-    unmask_alarm();
 }

@@ -102,7 +102,7 @@ void npc_next_pos_line_of_sight(dungeon_t *d, character *c, pair_t next)
   pc *the_pc;
   npc *the_npc;
 
-  the_pc = (pc *) d->pc;
+  the_pc = (pc *) d->the_pc;
   the_npc = (npc *) c;
 
   dir[dim_y] = the_pc->position[dim_y] - the_npc->position[dim_y];
@@ -133,7 +133,7 @@ void npc_next_pos_line_of_sight_tunnel(dungeon_t *d,
   pc *the_pc;
   npc *the_npc;
 
-  the_pc = (pc *) d->pc;
+  the_pc = (pc *) d->the_pc;
   the_npc = (npc *) c;
 
   dir[dim_y] = the_pc->position[dim_y] - the_npc->position[dim_y];
@@ -297,11 +297,11 @@ static void npc_next_pos_00(dungeon_t *d, character *c, pair_t next)
   pc *the_pc;
   npc *the_npc;
 
-  the_pc = (pc *) d->pc;
+  the_pc = (pc *) d->the_pc;
   the_npc = (npc *) c;
 
   /* not smart; not telepathic; not tunneling; not erratic */
-  if (can_see(d, character_get_pos(c), character_get_pos(d->pc), 0)) {
+  if (can_see(d, character_get_pos(c), character_get_pos(d->the_pc), 0)) {
     the_npc->pc_last_known_position[dim_y] = the_pc->position[dim_y];
     the_npc->pc_last_known_position[dim_x] = the_pc->position[dim_x];
     npc_next_pos_line_of_sight(d, c, next);
@@ -315,11 +315,11 @@ static void npc_next_pos_01(dungeon_t *d, character *c, pair_t next)
   pc *the_pc;
   npc *the_npc;
 
-  the_pc = (pc *) d->pc;
+  the_pc = (pc *) d->the_pc;
   the_npc = (npc *) c;
 
   /*     smart; not telepathic; not tunneling; not erratic */
-  if (can_see(d, character_get_pos(c), character_get_pos(d->pc), 0)) {
+  if (can_see(d, character_get_pos(c), character_get_pos(d->the_pc), 0)) {
     the_npc->pc_last_known_position[dim_y] = the_pc->position[dim_y];
     the_npc->pc_last_known_position[dim_x] = the_pc->position[dim_x];
     the_npc->have_seen_pc = 1;
@@ -339,7 +339,7 @@ static void npc_next_pos_02(dungeon_t *d, character *c, pair_t next)
   pc *the_pc;
   npc *the_npc;
 
-  the_pc = (pc *) d->pc;
+  the_pc = (pc *) d->the_pc;
   the_npc = (npc *) c;
 
   /* not smart;     telepathic; not tunneling; not erratic */
@@ -359,11 +359,11 @@ static void npc_next_pos_04(dungeon_t *d, character *c, pair_t next)
   pc *the_pc;
   npc *the_npc;
 
-  the_pc = (pc *) d->pc;
+  the_pc = (pc *) d->the_pc;
   the_npc = (npc *) c;
 
   /* not smart; not telepathic;     tunneling; not erratic */
-  if (can_see(d, character_get_pos(c), character_get_pos(d->pc), 0)) {
+  if (can_see(d, character_get_pos(c), character_get_pos(d->the_pc), 0)) {
     the_npc->pc_last_known_position[dim_y] = the_pc->position[dim_y];
     the_npc->pc_last_known_position[dim_x] = the_pc->position[dim_x];
     npc_next_pos_line_of_sight(d, c, next);
@@ -377,11 +377,11 @@ static void npc_next_pos_05(dungeon_t *d, character *c, pair_t next)
   pc *the_pc;
   npc *the_npc;
 
-  the_pc = (pc *) d->pc;
+  the_pc = (pc *) d->the_pc;
   the_npc = (npc *) c;
 
   /*     smart; not telepathic;     tunneling; not erratic */
-  if (can_see(d, character_get_pos(c), character_get_pos(d->pc), 0)) {
+  if (can_see(d, character_get_pos(c), character_get_pos(d->the_pc), 0)) {
     the_npc->pc_last_known_position[dim_y] = the_pc->position[dim_y];
     the_npc->pc_last_known_position[dim_x] = the_pc->position[dim_x];
     the_npc->have_seen_pc = 1;
@@ -401,7 +401,7 @@ static void npc_next_pos_06(dungeon_t *d, character *c, pair_t next)
   pc *the_pc;
   npc *the_npc;
 
-  the_pc = (pc *) d->pc;
+  the_pc = (pc *) d->the_pc;
   the_npc = (npc *) c;
 
   /* not smart;     telepathic;     tunneling; not erratic */
@@ -558,7 +558,7 @@ npc::npc(dungeon_t *d, const monster_description &m)
   speed = m.speed.roll();
   hp = m.hitpoints.roll();
   damage = &m.damage;
-  next_turn = d->pc->next_turn;
+  next_turn = d->the_pc->next_turn;
   alive = 1;
   sequence_number = ++d->character_sequence_number;
   characteristics = m.abilities;

@@ -56,6 +56,8 @@ typedef struct room {
   uint32_t connected;
 } room_t;
 
+class pc;
+
 typedef struct dungeon {
   uint32_t num_rooms;
   room_t *rooms;
@@ -73,7 +75,7 @@ typedef struct dungeon {
   uint8_t pc_tunnel[DUNGEON_Y][DUNGEON_X];
   character *charmap[DUNGEON_Y][DUNGEON_X];
   object *objmap[DUNGEON_Y][DUNGEON_X];
-  character *pc; /* PC needs to be a pointer, since it is a class */
+  pc *the_pc; /* PC needs to be a pointer, since it is a class */
   heap_t next_turn;
   uint16_t num_monsters;
   uint16_t max_monsters;

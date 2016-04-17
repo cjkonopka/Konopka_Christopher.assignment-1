@@ -31,17 +31,6 @@ class character {
   uint32_t sequence_number;
   uint32_t get_color() { return color[rand_range(0, color.size() - 1)]; }
   char get_symbol() { return symbol; }
-  char get_speed()
-  {
-    if(speed > 0)
-    {
-        return speed;
-    }
-    else
-    {
-        return 1;
-    }
-  }
 };
 
 int32_t compare_characters_by_next_turn(const void *character1,
@@ -54,11 +43,11 @@ void character_set_y(character *c, int8_t y);
 int8_t character_get_x(const character *c);
 void character_set_x(character *c, int8_t x);
 uint32_t character_get_next_turn(const character *c);
-void character_die(dungeon *d, character *c);
+void character_die(character *c);
 int character_is_alive(const character *c);
 void character_next_turn(character *c);
 void character_reset_turn(character *c);
 char character_get_symbol(const character *c);
-const char *character_get_name(const character *c);
+const char *character_get_name(const character *c);  
 
 #endif

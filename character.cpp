@@ -8,14 +8,7 @@
 
 void character_delete(void *c)
 {
-  if(((character *)c)->symbol == '@')
-  {
-    delete_pc((pc*) c);
-  }
-  else
-  {
-    delete (character *) c;
-   }
+  delete (character *) c;
 }
 
 static char *print_character(const void *v)
@@ -98,8 +91,8 @@ uint32_t can_see(dungeon_t *d, pair_t voyeur, pair_t exhibitionist, int is_pc)
     b = c - del[dim_x];
     for (i = 0; i <= del[dim_x]; i++) {
       if (is_pc) {
-        pc_learn_terrain(d->pc, first, mappair(first));
-        pc_see_object(d->pc, objpair(first));
+        pc_learn_terrain(d->the_pc, first, mappair(first));
+        pc_see_object(d->the_pc, objpair(first));
       }
       if ((mappair(first) < ter_floor) && i && (i != del[dim_x])) {
         return 0;
@@ -120,8 +113,8 @@ uint32_t can_see(dungeon_t *d, pair_t voyeur, pair_t exhibitionist, int is_pc)
     b = c - del[dim_y];
     for (i = 0; i <= del[dim_y]; i++) {
       if (is_pc) {
-        pc_learn_terrain(d->pc, first, mappair(first));
-        pc_see_object(d->pc, objpair(first));
+        pc_learn_terrain(d->the_pc, first, mappair(first));
+        pc_see_object(d->the_pc, objpair(first));
       }
       if ((mappair(first) < ter_floor) && i && (i != del[dim_y])) {
         return 0;
@@ -171,10 +164,9 @@ uint32_t character_get_next_turn(const character *c)
   return ((character *) c)->next_turn;
 }
 
-void character_die(dungeon_t *d, character *c)
+void character_die(character *c)
 {
   ((character *) c)->alive = 0;
-  d->charmap[c->position[dim_y]][c->position[dim_x]] = NULL;
 }
 
 int character_is_alive(const character *c)
@@ -186,14 +178,14 @@ void character_next_turn(character *c)
 {
   character *the_character = (character *) c;
 
-  the_character->next_turn += (1000 / the_character->get_speed());
+  the_character->next_turn += (1000 / the_character->speed);
 }
 
 void character_reset_turn(character *c)
 {
   character *the_character = (character *) c;
 
-  the_character->next_turn -= (1000 / the_character->get_speed());
+  the_character->next_turn -= (1000 / the_character->speed);
 }
 
 char character_get_symbol(const character *c)

@@ -56,7 +56,8 @@ void dijkstra(dungeon_t *d)
       d->pc_distance[y][x] = 255;
     }
   }
-  d->pc_distance[character_get_y(d->pc)][character_get_x(d->pc)] = 0;
+  d->pc_distance[character_get_y((const character *) d->the_pc)]
+                [character_get_x((const character *) d->the_pc)] = 0;
 
   heap_init(&h, dist_cmp, NULL);
 
@@ -164,7 +165,8 @@ void dijkstra_tunnel(dungeon_t *d)
       d->pc_tunnel[y][x] = 255;
     }
   }
-  d->pc_tunnel[character_get_y(d->pc)][character_get_x(d->pc)] = 0;
+  d->pc_tunnel[character_get_y((const character *) d->the_pc)]
+              [character_get_x((const character *) d->the_pc)] = 0;
 
   heap_init(&h, tunnel_cmp, NULL);
 

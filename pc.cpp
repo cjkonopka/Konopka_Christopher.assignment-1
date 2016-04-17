@@ -8,52 +8,88 @@
 #include "utils.h"
 #include "move.h"
 #include "path.h"
+#include "io.h"
+
+const char *eq_slot_name[num_eq_slots] = {
+  "weapon",
+  "offhand",
+  "ranged",
+  "light",
+  "armor",
+  "helmet",
+  "cloak",
+  "gloves",
+  "boots",
+  "amulet",
+  "lh ring",
+  "rh ring"
+};
+
+pc::pc()
+{
+  uint32_t i;
+
+  for (i = 0; i < num_eq_slots; i++) {
+    eq[i] = 0;
+  }
+
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    in[i] = 0;
+  }
+
+  hp = 1000;
+}
+
+pc::~pc()
+{
+  uint32_t i;
+
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    if (in[i]) {
+      delete in[i];
+      in[i] = NULL;
+    }
+  }
+    
+  for (i = 0; i < num_eq_slots; i++) {
+    if (eq[i]) {
+      delete eq[i];
+      eq[i] = NULL;
+    }
+  }
+}
 
 void delete_pc(character *the_pc)
 {
-  int i;
-  for(i = 0; i <12; i++)
-  {
-    if(((pc*) the_pc)->equipment[i] != NULL)
-    {
-        delete(((pc*) the_pc)->equipment[i]);
-        ((pc*) the_pc)->equipment[i] = NULL;
-    }
-    if(i < 10 && ((pc*) the_pc)->inventory[i] != NULL)
-    {
-        delete(((pc*) the_pc)->inventory[i]);
-        ((pc*) the_pc)->inventory[i] = NULL;
-    }
-  }
   delete static_cast<pc *>(the_pc);
 }
 uint32_t pc_is_alive(dungeon_t *d)
 {
-  return ((pc *) d->pc)->alive;
+  return ((pc *) d->the_pc)->alive;
 }
 
 void place_pc(dungeon_t *d)
 {
-  ((pc *) d->pc)->position[dim_y] = rand_range(d->rooms->position[dim_y],
+  ((pc *) d->the_pc)->position[dim_y] = rand_range(d->rooms->position[dim_y],
                                                (d->rooms->position[dim_y] +
                                                 d->rooms->size[dim_y] - 1));
-  ((pc *) d->pc)->position[dim_x] = rand_range(d->rooms->position[dim_x],
+  ((pc *) d->the_pc)->position[dim_x] = rand_range(d->rooms->position[dim_x],
                                                (d->rooms->position[dim_x] +
                                                 d->rooms->size[dim_x] - 1));
 
-  pc_init_known_terrain(d->pc);
-  pc_observe_terrain(d->pc, d);
+  pc_init_known_terrain(d->the_pc);
+  pc_observe_terrain(d->the_pc, d);
 }
 
 void config_pc(dungeon_t *d)
 {
-  int i;
   /* This should be in the PC constructor, now. */
   pc *the_pc;
   static dice pc_dice(0, 1, 4);
 
   the_pc = new pc;
-  d->pc = (character *) the_pc;
+  d->the_pc = the_pc;
+
   the_pc->symbol = '@';
 
   place_pc(d);
@@ -64,19 +100,10 @@ void config_pc(dungeon_t *d)
   the_pc->sequence_number = 0;
   the_pc->color.push_back(COLOR_WHITE);
   the_pc->damage = &pc_dice;
-  the_pc->hp = 100;
-  for(i = 0; i < 12; i++)
-  {
-    the_pc->equipment[i] = NULL;
-    if(i < 10)
-    {
-        the_pc->inventory[i] = NULL;
-    }
-  }
-    the_pc->name = "Isabella Garcia-Shapiro";
+  the_pc->name = "Isabella Garcia-Shapiro";
 
   d->charmap[the_pc->position[dim_y]]
-            [the_pc->position[dim_x]] = (character *) d->pc;
+            [the_pc->position[dim_x]] = (character *) d->the_pc;
 
   dijkstra(d);
   dijkstra_tunnel(d);
@@ -89,17 +116,17 @@ uint32_t pc_next_pos(dungeon_t *d, pair_t dir)
   /* Tunnel to the nearest dungeon corner, then move around in hopes *
    * of killing a couple of monsters before we die ourself.          */
 
-  if (in_corner(d, d->pc)) {
+  if (in_corner(d, d->the_pc)) {
     /*
-    dir[dim_x] = (mapxy(d->pc.position[dim_x] - 1,
-                        d->pc.position[dim_y]) ==
+    dir[dim_x] = (mapxy(d->the_pc.position[dim_x] - 1,
+                        d->the_pc.position[dim_y]) ==
                   ter_wall_immutable) ? 1 : -1;
     */
-    dir[dim_y] = (mapxy(((pc *) d->pc)->position[dim_x],
-                        ((pc *) d->pc)->position[dim_y] - 1) ==
+    dir[dim_y] = (mapxy(((pc *) d->the_pc)->position[dim_x],
+                        ((pc *) d->the_pc)->position[dim_y] - 1) ==
                   ter_wall_immutable) ? 1 : -1;
   } else {
-    dir_nearest_wall(d, d->pc, dir);
+    dir_nearest_wall(d, d->the_pc, dir);
   }
 
   return 0;
@@ -183,7 +210,7 @@ void pc_observe_terrain(character *the_pc, dungeon_t *d)
     can_see(d, p->position, where, 1);
     where[dim_y] = y_max;
     can_see(d, p->position, where, 1);
-  }
+  }       
 }
 
 int32_t is_illuminated(character *the_pc, int8_t y, int8_t x)
@@ -191,144 +218,157 @@ int32_t is_illuminated(character *the_pc, int8_t y, int8_t x)
   return ((pc *) the_pc)->visible[y][x];
 }
 
-int pc_get_free_inv_slot(character *the_pc)
+void pc::recalculate_speed()
 {
-    int i;
-    for(i = 0; i < 10; i++)
-    {
-        if(!((pc *) the_pc)->inventory[i])
-        {
-            return i;
-        }
+  int i;
+
+  speed = 10;
+  for (i = 0; i < num_eq_slots; i++) {
+    if (eq[i]) {
+      speed += eq[i]->get_speed();
     }
-    return -1;
+  }
+
+  if (speed <= 0) {
+    speed = 1;
+  }
 }
 
-bool pc_pickup_object(dungeon_t *d)
+uint32_t pc::wear_in(uint32_t slot)
 {
-    int iSlot;
-    iSlot = pc_get_free_inv_slot((character *) d->pc);
-    if(iSlot == -1)
-    {
-        return false;
-    }
+  object *tmp;
+  uint32_t i;
 
-    ((pc*) d->pc)->inventory[iSlot] = d->objmap[d->pc->position[dim_y]][d->pc->position[dim_x]];
-    d->objmap[d->pc->position[dim_y]][d->pc->position[dim_x]] = ((pc *) d->pc)->inventory[iSlot]->get_next();
-    ((pc*) d->pc)->inventory[iSlot]->set_next(NULL);
-    return true;
+  if (!in[slot] || !in[slot]->is_equipable()) {
+    return 1;
+  }
+
+  /* Rings are tricky since there are two slots.  We will alwas favor *
+   * an empty slot, and if there is no empty slot, we'll use the      *
+   * first slot.                                                      */
+  i = in[slot]->get_eq_slot_index();
+  if (eq[i] &&
+      ((eq[i]->get_type() == objtype_RING) &&
+       !eq[i + 1])) {
+    i++;
+  }
+
+  tmp = in[slot];
+  in[slot] = eq[i];
+  eq[i] = tmp;
+
+  io_queue_message("You wear %s.", eq[i]->get_name());
+
+  recalculate_speed();
+
+  return 0;
 }
 
-bool pc_equip(dungeon_t *d, int slot)
+uint32_t pc::has_open_inventory_slot()
 {
-   // io_queue_message("%d", "item to be equipped: ")
-   // io_display(d);
+  int i;
 
-    if(slot < 0 || slot > 9)
-    {
-        return false;
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    if (!in[i]) {
+      return 1;
     }
-    if(((pc *)d->pc)->inventory[slot] == NULL)
-    {
-        return false;
-    }
+  }
 
-    int type = (((pc *)d->pc)->inventory[slot]->get_type() - 1);
-
-    if(((pc *)d->pc)->inventory[slot]->get_type() == objtype_RING && ((pc *)d->pc)->equipment[10] != NULL)
-    {
-        type = 11;
-    }
-
-    if(((pc *)d->pc)->equipment[type] != NULL)
-    {
-        object* obj = ((pc *)d->pc)->equipment[type];
-        ((pc *)d->pc)->equipment[type] = ((pc *)d->pc)->inventory[slot];
-        ((pc *)d->pc)->inventory[slot] = obj;
-    }
-    else
-    {
-        ((pc *)d->pc)->equipment[type] = ((pc *)d->pc)->inventory[slot];
-        ((pc *)d->pc)->inventory[slot] = NULL;
-    }
-     d->pc->speed += ((pc *)d->pc)->equipment[type]->get_speed();
-return true;
+  return 0;
 }
 
-bool pc_drop(dungeon_t *d, int slot, int inEquipment)
+int32_t pc::get_first_open_inventory_slot()
 {
-    if(slot < 0 || slot > 9)
-    {
-        return false;
-    }
-    if(inEquipment == 1 && ((pc *) d->pc)->equipment[slot] == NULL)
-    {
-        return false;
-    }
-    if(inEquipment == 0 && ((pc *) d->pc)->inventory[slot] == NULL)
-    {
-        return false;
-     }
+  int i;
 
-    object* obj;
-    if(inEquipment == 1)
-    {
-       obj = ((pc *) d->pc)->equipment[slot];
-       ((pc *) d->pc)->equipment[slot] = NULL;
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    if (!in[i]) {
+      return i;
     }
-    else
-    {
-      obj = ((pc *) d->pc)->inventory[slot];
-      ((pc *) d->pc)->inventory[slot] = NULL;
-    }
-    obj->set_next(d->objmap[d->pc->position[dim_y]][d->pc->position[dim_x]]);
-    d->objmap[d->pc->position[dim_y]][d->pc->position[dim_x]] = obj;
-    return true;
+  }
+
+  return -1;
 }
 
-bool pc_takeoff(dungeon_t* d,int slot)
+uint32_t pc::remove_eq(uint32_t slot)
 {
-    int freeSlot = pc_get_free_inv_slot(d->pc);
-    d->pc->speed -= ((pc *)d->pc)->equipment[slot]->get_speed();
-    if(freeSlot == -1)
-    {
-        pc_drop(d,slot,1);
-    }
-    else
-    {
-        ((pc*)d->pc)->inventory[freeSlot] = ((pc*)d->pc)->equipment[slot];
-        ((pc*)d->pc)->equipment[slot] = NULL;
-        return true;
-    }
-        return true;
+  if (!eq[slot]                      ||
+      !in[slot]->is_removable() ||
+      !has_open_inventory_slot()) {
+    io_queue_message("You can't remove %s, because you have nowhere to put it.",
+                     eq[slot]->get_name());
+
+    return 1;
+  }
+
+  io_queue_message("You remove %s.", eq[slot]->get_name());
+
+  in[get_first_open_inventory_slot()] = eq[slot];
+  eq[slot] = NULL;
+
+
+  recalculate_speed();
+
+  return 0;
 }
 
-bool pc_expunge(dungeon_t* d, int slot)
+uint32_t pc::drop_in(dungeon_t *d, uint32_t slot)
 {
-    if(((pc *) d->pc)->inventory[slot] == NULL)
-    {
-        return false;
-    }
-    delete(((pc *) d->pc)->inventory[slot]);
-    ((pc *) d->pc)->inventory[slot] = NULL;
-    return true;
+  if (!in[slot] || !in[slot]->is_dropable()) {
+    return 1;
+  }
+
+  io_queue_message("You drop %s.", in[slot]->get_name());
+
+  in[slot]->to_pile(d, position);
+  in[slot] = NULL;
+
+  return 0;
 }
 
-int pc_calculate_dmg(character *the_pc)
+uint32_t pc::destroy_in(uint32_t slot)
 {
-    int i;
-    uint32_t dmg;
-    dmg = 0;
-    for(i = 0; i < 12; i++)
-    {
-        if(((pc *)the_pc)->equipment[i] != NULL)
-        {
-            dmg += ((pc *)the_pc)->equipment[i]->roll_dice();
-        }
-        else if (i == 0)
-        {
-            dmg += the_pc->damage->roll();
-        }
-    }
-    return dmg;
+  if (!in[slot] || !in[slot]->is_destructable()) {
+    return 1;
+  }
+
+  io_queue_message("You destroy %s.", in[slot]->get_name());
+
+  delete in[slot];
+  in[slot] = NULL;
+
+  return 0;
+}
+
+uint32_t pc::pick_up(dungeon_t *d)
+{
+  object *o;
+
+  while (has_open_inventory_slot() &&
+         d->objmap[position[dim_y]][position[dim_x]]) {
+    io_queue_message("You pick up %s.",
+                     d->objmap[position[dim_y]][position[dim_x]]->get_name());
+    in[get_first_open_inventory_slot()] =
+      from_pile(d, position);
+  }
+
+  for (o = d->objmap[position[dim_y]][position[dim_x]];
+       o;
+       o = o->get_next()) {
+    io_queue_message("You have no room for %s.", o->get_name());
+  }
+
+  return 0;
+}
+
+object *pc::from_pile(dungeon_t *d, pair_t pos)
+{
+  object *o;
+
+  if ((o = (object *) d->objmap[pos[dim_y]][pos[dim_x]])) {
+    d->objmap[pos[dim_y]][pos[dim_x]] = o->get_next();
+    o->set_next(0);
+  }
+
+  return o;
 }

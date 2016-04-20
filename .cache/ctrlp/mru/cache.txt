@@ -1,3 +1,6 @@
+/home/ckonopka/Dungeon.h
+/home/ckonopka/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/dungeon.h
+/home/ckonopka/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/.git/MERGE_MSG
 /home/ckonopka/io.cpp
 /home/ckonopka/.rlg327/object_desc.txt
 /home/ckonopka/pc.cpp

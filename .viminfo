@@ -17,13 +17,13 @@
 $
 
 # Command Line History (newest to oldest):
+:qa
 :wqa
+:wq
 :w
 :q!
 :q
-:qa
 :u
-:wq
 :W
 :.ll
 :? generate
@@ -123,22 +123,30 @@ $
 	 
 
 # File marks:
-'0  217  8  ~/io.cpp
-'1  89  0  ~/NERD_tree_1
-'2  1  0  ~/.rlg327/io.cpp
-'3  124  44  ~/.rlg327/object_desc.txt
-'4  221  2  ~/io.cpp
-'5  560  2  ~/npc.cpp
-'6  62  4  ~/move.cpp
-'7  64  0  ~/npc.cpp
-'8  9  11  ~/.rlg327/object_desc.txt
-'9  47  25  ~/move.cpp
+'0  1  0  ~/Dungeon.h
+'1  32  8  ~/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/NERD_tree_2
+'2  74  0  ~/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/NERD_tree_2
+'3  217  8  ~/io.cpp
+'4  163  0  ~/NERD_tree_1
+'5  1  0  ~/.rlg327/io.cpp
+'6  124  44  ~/.rlg327/object_desc.txt
+'7  221  2  ~/io.cpp
+'8  560  2  ~/npc.cpp
+'9  62  4  ~/move.cpp
 
 # Jumplist (newest first):
+-'  1  0  ~/Dungeon.h
+-'  32  8  ~/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/NERD_tree_2
+-'  71  2  ~/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/NERD_tree_2
+-'  1  0  ~/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/NERD_tree_2
+-'  1  0  ~/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/dungeon.h
+-'  74  0  ~/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/NERD_tree_2
+-'  141  2  ~/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/NERD_tree_2
+-'  1  0  ~/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/.git/MERGE_MSG
 -'  217  8  ~/io.cpp
 -'  212  4  ~/io.cpp
--'  89  0  ~/NERD_tree_1
--'  149  2  ~/NERD_tree_1
+-'  163  0  ~/NERD_tree_1
+-'  223  2  ~/NERD_tree_1
 -'  1  0  ~/NERD_tree_1
 -'  221  2  ~/io.cpp
 -'  1  0  ~/.rlg327/io.cpp
@@ -150,44 +158,44 @@ $
 -'  160  45  ~/move.cpp
 -'  143  7  ~/move.cpp
 -'  560  2  ~/npc.cpp
--'  269  7  ~/NERD_tree_1
--'  295  2  ~/NERD_tree_1
+-'  343  7  ~/NERD_tree_1
+-'  369  2  ~/NERD_tree_1
 -'  539  0  ~/npc.cpp
 -'  62  4  ~/move.cpp
--'  339  5  ~/NERD_tree_1
--'  369  2  ~/NERD_tree_1
+-'  413  5  ~/NERD_tree_1
+-'  443  2  ~/NERD_tree_1
 -'  64  0  ~/npc.cpp
 -'  562  24  ~/npc.cpp
--'  417  5  ~/NERD_tree_1
--'  443  2  ~/NERD_tree_1
+-'  491  5  ~/NERD_tree_1
+-'  517  2  ~/NERD_tree_1
 -'  47  8  ~/move.cpp
 -'  30  0  ~/.rlg327/object_desc.txt
--'  487  7  ~/NERD_tree_1
--'  517  2  ~/NERD_tree_1
+-'  561  7  ~/NERD_tree_1
+-'  591  2  ~/NERD_tree_1
 -'  13  15  ~/move.h
 -'  10  0  ~/.rlg327/object_desc.txt
--'  522  16  ~/NERD_tree_1
--'  523  2  ~/NERD_tree_1
--'  527  12  ~/NERD_tree_1
+-'  596  16  ~/NERD_tree_1
 -'  597  2  ~/NERD_tree_1
--'  80  33  ~/move.cpp
--'  599  7  ~/NERD_tree_1
+-'  601  12  ~/NERD_tree_1
 -'  671  2  ~/NERD_tree_1
+-'  80  33  ~/move.cpp
+-'  673  7  ~/NERD_tree_1
+-'  745  2  ~/NERD_tree_1
 -'  948  0  ~/io.cpp
 -'  63  4  ~/move.cpp
 -'  67  4  ~/move.cpp
 -'  36  18  ~/object.h
 -'  33  0  ~/object.cpp
--'  723  8  ~/NERD_tree_1
--'  745  2  ~/NERD_tree_1
+-'  797  8  ~/NERD_tree_1
+-'  819  2  ~/NERD_tree_1
 -'  424  4  ~/pc.cpp
 -'  952  4  ~/io.cpp
 -'  951  58  ~/io.cpp
 -'  37  1  ~/character.h
 -'  1103  4  ~/io.cpp
 -'  56  0  ~/character.h
--'  837  9  ~/NERD_tree_1
--'  893  2  ~/NERD_tree_1
+-'  911  9  ~/NERD_tree_1
+-'  967  2  ~/NERD_tree_1
 -'  1021  4  ~/io.cpp
 -'  1075  12  ~/io.cpp
 -'  1055  11  ~/io.cpp
@@ -208,8 +216,8 @@ $
 -'  583  19  ~/io.cpp
 -'  562  0  ~/io.cpp
 -'  201  0  ~/Konopka_Christopher.assignment-1.8/io.cpp
--'  1080  0  ~/NERD_tree_1
--'  1176  2  ~/NERD_tree_1
+-'  1154  0  ~/NERD_tree_1
+-'  1250  2  ~/NERD_tree_1
 -'  504  8  ~/io.cpp
 -'  495  29  ~/io.cpp
 -'  506  6  ~/io.cpp
@@ -217,7 +225,7 @@ $
 -'  94  2  ~/NERD_tree_2
 -'  149  2  ~/NERD_tree_2
 -'  1  0  ~/NERD_tree_2
--'  1329  2  ~/NERD_tree_1
+-'  1403  2  ~/NERD_tree_1
 -'  379  0  ~/pc.cpp
 -'  1  0  ~/Makefile
 -'  19  5  ~/move.o
@@ -225,12 +233,62 @@ $
 -'  57  27  ~/pc.h
 -'  542  60  ~/io.cpp
 -'  525  0  ~/io.cpp
--'  390  10  ~/pc.cpp
--'  15  0  ~/NERD_tree_1
--'  75  2  ~/NERD_tree_1
--'  1  0  ~/.rlg327/io.cpp
+-'  32  8  ~/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/NERD_tree_2
 
 # History of marks within files (newest to oldest):
+
+> ~/Dungeon.h
+	"	1	0
+
+> ~/NERD_tree_1
+	"	4	0
+	^	478	9
+	.	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+	+	1	0
+
+> ~/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/dungeon.h
+	"	1	0
+
+> ~/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/NERD_tree_2
+	"	32	8
+	.	1	0
+	+	1	0
+	+	1	0
+
+> ~/Konopka_Christopher.assignment-1.10/Konopka_Christopher.assignment-1/.git/MERGE_MSG
+	"	11	12
 
 > ~/io.cpp
 	"	217	8
@@ -336,43 +394,6 @@ $
 	+	212	5
 	+	221	47
 	+	222	49
-
-> ~/NERD_tree_1
-	"	4	0
-	^	404	9
-	.	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
-	+	1	0
 
 > ~/.rlg327/io.cpp
 	"	1	0
@@ -2702,111 +2723,3 @@ $
 	+	173	26
 	+	132	26
 	+	130	22
-
-> ~/Konopka_Christopher.assignment-1/Dungeon.c
-	"	29	4
-	^	81	47
-	.	81	46
-	+	431	60
-	+	440	61
-	+	456	5
-	+	453	7
-	+	422	18
-	+	454	5
-	+	455	14
-	+	457	12
-	+	453	7
-	+	458	3
-	+	461	5
-	+	460	4
-	+	458	5
-	+	459	7
-	+	455	15
-	+	459	15
-	+	453	3
-	+	454	3
-	+	455	3
-	+	456	3
-	+	457	3
-	+	458	3
-	+	459	3
-	+	460	6
-	+	461	0
-	+	431	0
-	+	429	10
-	+	428	59
-	+	431	0
-	+	462	0
-	+	461	3
-	+	451	7
-	+	452	7
-	+	453	7
-	+	454	7
-	+	455	11
-	+	456	7
-	+	457	7
-	+	458	7
-	+	459	11
-	+	460	7
-	+	441	16
-	+	430	72
-	+	431	0
-	+	430	26
-	+	68	38
-	+	72	25
-	+	71	21
-	+	24	27
-	+	23	88
-	+	27	0
-	+	24	58
-	+	25	21
-	+	24	0
-	+	25	28
-	+	24	28
-	+	26	10
-	+	42	9
-	+	44	4
-	+	44	53
-	+	45	0
-	+	54	0
-	+	56	9
-	+	58	9
-	+	59	9
-	+	47	9
-	+	61	9
-	+	48	9
-	+	49	9
-	+	62	9
-	+	63	9
-	+	42	9
-	+	43	9
-	+	57	9
-	+	58	10
-	+	59	10
-	+	62	10
-	+	63	10
-	+	49	10
-	+	48	10
-	+	45	10
-	+	44	10
-	+	43	22
-	+	47	23
-	+	57	19
-	+	61	20
-	+	84	62
-	+	79	17
-	+	90	0
-	+	81	22
-	+	77	48
-	+	81	55
-	+	81	98
-	+	81	13
-	+	81	69
-	+	81	13
-	+	82	0
-	+	81	13
-	+	85	12
-	+	81	46
-
-> ~/Konopka_Christopher.assignment-1/player.cpp
-	"	1	0

@@ -30,7 +30,9 @@ class object {
   int32_t roll_dice();
   int32_t get_type();
   bool have_seen() { return seen; }
-  void has_been_seen() { seen = true; }
+  void has_been_seen() { seen = true;}
+  int get_dodge() {return dodge;}
+  int get_defence() {return defence;}
   uint32_t is_equipable();
   uint32_t is_removable();
   uint32_t is_dropable();

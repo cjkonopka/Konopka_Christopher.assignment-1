@@ -14,7 +14,9 @@ class character {
  public:
   char symbol;
   pair_t position;
-  int32_t speed;
+  int defence;
+  int dodge;
+  int speed;
   uint32_t next_turn;
   uint32_t alive;
   std::vector<uint32_t> color;
@@ -31,6 +33,7 @@ class character {
   uint32_t sequence_number;
   uint32_t get_color() { return color[rand_range(0, color.size() - 1)]; }
   char get_symbol() { return symbol; }
+  virtual ~ character(){};
 };
 
 int32_t compare_characters_by_next_turn(const void *character1,
@@ -48,6 +51,6 @@ int character_is_alive(const character *c);
 void character_next_turn(character *c);
 void character_reset_turn(character *c);
 char character_get_symbol(const character *c);
-const char *character_get_name(const character *c);  
+const char *character_get_name(const character *c);
 
 #endif

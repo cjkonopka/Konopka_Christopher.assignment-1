@@ -1,0 +1,1 @@
+{'#ifndef', 'DICE_H', '# define', '# include', 'stdint', 'iostream', 'class', 'dice', 'private', 'int32_t', 'base', 'uint32_t', 'number', 'sides', 'public', 'inline', 'void', 'this', 'set_base', 'set_number', 'set_sides', 'roll', 'const', 'ostream', 'print', 'get_base', 'return', 'get_number', 'get_sides', 'operator', '#endif'}

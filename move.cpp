@@ -17,21 +17,80 @@
 void do_combat(dungeon_t *d, character *atk, character *def)
 {
   uint32_t damage, i;
-  
+    float defMultipler;
+    int defenderDodge;
+    int defenderDef;
+    bool dodged = false;
+
+    defenderDodge = 0;
+    defenderDef = 0;
+  if(def)
+  {
+    defenderDodge = def->dodge;
+    defenderDef = def->defence;
+  }
+
+  int blocked = 0;
+
   if (atk != d->the_pc) {
     damage = atk->damage->roll();
-    io_queue_message("The %s hits you for %d.", atk->name, damage);
-  } else {
+    for(i = 0; i <num_eq_slots; i++)
+    {
+        if(d->the_pc->eq[i])
+        {
+            defenderDodge += d->the_pc->eq[i]->get_dodge();
+            defenderDef += d->the_pc->eq[i]->get_defence();
+        }
+    }
+    if(defenderDodge > 180)
+    {
+        defenderDodge = 180;
+    }
+
+    if(rand()%200 + 1 > defenderDodge)
+    {
+        blocked = damage;
+        defMultipler = ((float)100 / float(100 + defenderDef));
+        damage = (damage * defMultipler);
+        blocked = blocked - damage;
+        io_queue_message("The %s hits you for %d. You blocked %d damage.", atk->name, damage, blocked);
+    }
+    else
+    {
+        io_queue_message("You dodge the %s's attack.", atk->name);
+        dodged = true;
+    }
+  }
+  else
+    {
     for (i = damage = 0; i < num_eq_slots; i++) {
       if (i == eq_slot_weapon && !d->the_pc->eq[i]) {
         damage += atk->damage->roll();
-      } else if (d->the_pc->eq[i]) {
+      } else if (d->the_pc->eq[i] && i != 2) {
         damage += d->the_pc->eq[i]->roll_dice();
       }
     }
-    io_queue_message("You hit the %s for %d.", def->name, damage);
-  }
+    if(defenderDodge > 190)
+    {
+        defenderDodge = 190;
+    }
 
+    if(rand()%200 + 1 > defenderDodge)
+    {
+        blocked = damage;
+        defMultipler = ((float)100 / (float)(100 + defenderDef));
+        damage = (damage * defMultipler);
+        blocked = blocked - damage;
+        io_queue_message("you hit the %s for %d. It blocked %d damage.", def->name, damage, blocked);
+    }
+    else
+    {
+       io_queue_message("The %s dodged your attack.", def->name);
+        dodged = true;
+    }
+  }
+  if(dodged == false)
+  {
   if (damage >= def->hp) {
     if (atk != d->the_pc) {
       io_queue_message("You die.");
@@ -47,6 +106,7 @@ void do_combat(dungeon_t *d, character *atk, character *def)
     charpair(def->position) = NULL;
   } else {
     def->hp -= damage;
+  }
   }
 }
 

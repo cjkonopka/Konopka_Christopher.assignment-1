@@ -1,0 +1,1 @@
+{'#ifndef', 'UTILS_H', '# define', '# include', 'cstdlib', 'Returns', 'true', 'random', 'float', 'less', 'than', 'numerator', 'denominator', 'Uses', 'only', 'integer', 'math', 'rand_under', 'rand', 'RAND_MAX', 'rand_range', 'makedirectory', 'char', '#endif'}

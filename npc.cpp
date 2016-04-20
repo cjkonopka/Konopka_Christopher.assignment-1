@@ -56,8 +56,6 @@ void npc_next_pos_rand_tunnel(dungeon_t *d, character *c, pair_t next)
       dijkstra(d);
       dijkstra_tunnel(d);
     }
-
-    next[dim_x] = n[dim_x];
     next[dim_y] = n[dim_y];
   } else {
     hardnesspair(n) -= 60;
@@ -558,6 +556,8 @@ npc::npc(dungeon_t *d, const monster_description &m)
   speed = m.speed.roll();
   hp = m.hitpoints.roll();
   damage = &m.damage;
+  dodge = 40;
+  defence = 10;
   next_turn = d->the_pc->next_turn;
   alive = 1;
   sequence_number = ++d->character_sequence_number;

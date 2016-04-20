@@ -50,7 +50,7 @@ pc::~pc()
       in[i] = NULL;
     }
   }
-    
+
   for (i = 0; i < num_eq_slots; i++) {
     if (eq[i]) {
       delete eq[i];
@@ -99,6 +99,8 @@ void config_pc(dungeon_t *d)
   the_pc->alive = 1;
   the_pc->sequence_number = 0;
   the_pc->color.push_back(COLOR_WHITE);
+  the_pc->defence = 0;
+  the_pc->dodge = 10;
   the_pc->damage = &pc_dice;
   the_pc->name = "Isabella Garcia-Shapiro";
 
@@ -210,7 +212,7 @@ void pc_observe_terrain(character *the_pc, dungeon_t *d)
     can_see(d, p->position, where, 1);
     where[dim_y] = y_max;
     can_see(d, p->position, where, 1);
-  }       
+  }
 }
 
 int32_t is_illuminated(character *the_pc, int8_t y, int8_t x)
@@ -372,3 +374,82 @@ object *pc::from_pile(dungeon_t *d, pair_t pos)
 
   return o;
 }
+
+void pc::DoRangedCombat(dungeon_t *d, character* c)
+{
+int i;
+int damage = 0;
+int defenderDodge = c->dodge;
+int defenderDef = c->defence;
+int blocked = 0;
+float defMultipler;
+
+  if(rand()%100 + 1 > defenderDodge)
+  {
+    for (i = 2; i < num_eq_slots; i++) {
+      if (d->the_pc->eq[i]) {
+        damage += d->the_pc->eq[i]->roll_dice();
+      }
+    }
+     blocked = damage;
+     defMultipler = ((float)100 / (float)(100 + defenderDef));
+     damage = (damage * defMultipler);
+     blocked = blocked - damage;
+     io_queue_message("you hit the %s for %d. It blocked %d damage.", c->name, damage, blocked);
+
+    if (damage >= c->hp) {
+    c->hp = 0;
+    c->alive = 0;
+    d->num_monsters--;
+    charpair(c->position) = NULL;
+    io_queue_message("The %s dies.", c->name);
+    } else {
+        c->hp -= damage;
+    }
+  }
+  else
+  {
+     io_queue_message("The %s dodged your ranged attack", c->name);
+  }
+}
+
+void pc::DoBombCombat(dungeon_t *d, character* c)
+{
+int i, j;
+int damage = 100;
+int damageSplash = (damage / 2);
+int dmgUsed = 0;
+
+    for(i = (character_get_y(c) - 1); i <= (character_get_y(c) + 1); i++)
+    {
+        for(j = (character_get_x(c) - 1); j <= (character_get_x(c) + 1); j++)
+        {
+            if(d->charmap[i][j] && d->charmap[i][j] != d->the_pc)
+            {
+                if(i == character_get_y(c) && j == character_get_x(c))
+                {
+                    dmgUsed = damage;
+                }
+                else
+                {
+                    dmgUsed = damageSplash;
+                }
+                io_queue_message("You hit the %s for %d.", d->charmap[i][j]->name, dmgUsed);
+
+                if (dmgUsed >= d->charmap[i][j]->hp)
+                {
+                    io_queue_message("The %s dies.", d->charmap[i][j]->name);
+                    d->charmap[i][j]->hp = 0;
+                    d->charmap[i][j]->alive = 0;
+                    d->num_monsters--;
+                    charpair(d->charmap[i][j]->position) = NULL;
+                }
+                else
+                {
+                     d->charmap[i][j]->hp -= dmgUsed;
+                }
+            }
+        }
+    }
+}
+

@@ -1,0 +1,126 @@
+# Change Log
+All notable changes to this project will be documented in this file.
+
+## [0.1.0] - 2016-26-01
+### Added
+-Dungeon Generator: five to ten rooms at least two by three in dimension are randomly generated and added to a 21 by 80 dungeon.
+-rocks are represented with spaces, rooms with periods.
+-After the rooms are placed they are randomly connected via corridors represented with "#"
+
+## [0.1.1] - 2016-01-02
+### Added
+-Fixed a glitch that caused the program to crash when too many large of rooms where generated to be placed in the dungeon.
+-a save function that writes the dungeon data to .rlg327 in home directory. called via --save.
+-a loading function that reads the dungeon data from .rlg327 in home directory. called via --load.
+-both can be called at the same time.
+-Writing and reading are done in big endian.
+
+## [0.1.3] - 2016-06-02
+### Added
+- a PlayerCharacter that is represented with a '@' 
+	the @ is created a placed in a random room of the dungeon after creation.
+	the @ will not spawn adjacent to a room wall unless the room has a height of 2.
+-a method that prints out the dungeon in terms of distance from the @ without tunneling through rocks.
+	0-9 represents distances 0-10, a-z represents distances 10-35, A-Z represents distances 36-61.
+	distances greater than 61 are printed as their normal characters.
+-a method that prints out the dungeon in terms of distance from the @ that  allows tunneling through rocks.
+	rocks with hardnesses in the ranges [1, 84], [85, 170], and [171, 254] have weights of 1, 2, and 3, respectively
+	the same printing rules and character codes  from the no tunneling method apply.
+
+## [0.1.4] - 2016-13-02
+### Added
+-a Util header to store structs, macros, and constants
+	-several new structs including monster and character
+	-macros to define the type of monster
+-a method that makes the player character move randomly
+-a switch "--nummon" that allows the addition of a specified amount of monsters
+-a monster class to create 16 variations of monster
+	-each variation behaves differently based on the hexadecimal number's bits
+	-first bit:intelligence, second bit: telepathy, third bit: tunneling, forth bit: erratic
+-a method to place these monsters in the dungeon
+-a method to move these monsters according to their type
+-a priority queue that controls when the player and the monsters move
+-an ability to win if there are no monsters or lose if a monster kills the player
+
+## [0.1.5] - 2016-08-03
+### Added
+-Fixed a segmentation fault issue with non tunneling monsters
+-curses library
+-using curses to display dungeon instead of printf
+-movement with letter keys and number pad
+-an up and down stairwell in each dungeon
+-ability to go up and down levels using < and > at the respective stairwells in dungeon
+-a monster list, that gives all the positions of the monsters
+-a way to exit with 'S'
+
+## [0.1.6] - 2016-22-03
+### Added
+-character.cpp and character.h
+-converted monster and player to cpp files
+-redid headers to accommodate c and c++
+-refactored a significant amount of code in monster, player, main and dungeon to allow the due language compiling.
+-modified makefile to account for cpp files
+-fixed numerous bugs relating to wrappers/classes/pointers created by the conversion to c++
+-got previous functionality to fully work without memory leaks or crashes
+-multiple methods in player to enable Fog of War
+-Fog of war remembers terrain but not monster position after monsters aren't visible
+-Valgrind memory leak errors fixed dealing with delete.
+-fixed multiple memory/seg fault issues
+
+## [0.1.8] - 2016-03-04
+### Added
+-switched over to using his code
+-object and monster setter methods
+-object and monster factory methods
+-item.cpp and item.h
+-extended character and npc
+-num items and item array to dungeon
+-method to get an items symbol
+-io.cpp change to allow color
+-io.cpp change to print symbols
+-moved parsed/clear descriptions
+-extended delete dungeon
+
+## [0.1.9] - 2016-03-04
+### Added
+-player hp = 100
+-pulled down his 1.08 implementation
+-pc inventory and equipment arrays
+-picking up items method/cal
+-drop items menu method/call
+-stacking items on floor after drop
+-equipment menu method/call
+-inventory menu method/call
+-wear menu method/call
+-takeoff menu method/call
+-expunge menu method/call
+-inspect item menu/call
+-Do combat method redone to account damage based combat
+-kill character method updates char map
+-monsters swap instead of killing each other
+-items improve/hinder players speed
+-multiple ring pickup
+-game over at 0 hp
+
+## [0.1.10] - 2016-03-19
+### Added
+- ranged combat menu tied to 'r'
+- ranged combat to possible without ranged weapon equipped
+- adaptation of monster menu to display new messages/allow selection
+- selection based on capital letters
+- ranged do combat method
+- poison bomb spell combat menu tied to 'p'
+- poison bomb combat method
+- poison bombs hit adjacent monsters for 50% damage
+- Character dodge and defense stat
+- defense reduces damage
+- dodge completely evades
+- Initialization for dodge and defense for both pc and npc
+- do combat method adjusted to account for these stats
+- damage multiplier formula 100 / (100 * defense)
+- dodge/200 chance, maxs out at 190/200
+- items effect these stats
+- c now displays both of these stats
+- ranged attacks are easier to dodge
+- poison bomb cannot be dodged or defended
+- io output messages changed accordingly
